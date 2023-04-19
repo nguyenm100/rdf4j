@@ -23,7 +23,7 @@ public class TestActiveTransactionRegistry {
 
 	private static final Logger logger = LoggerFactory.getLogger(TestActiveTransactionRegistry.class);
 
-	private ActiveTransactionRegistry registry;
+	private DefaultActiveTransactionRegistry registry;
 
 	private Repository repository;
 
@@ -36,8 +36,8 @@ public class TestActiveTransactionRegistry {
 	 */
 	@BeforeEach
 	public void setUp() throws Exception {
-		System.setProperty(ActiveTransactionRegistry.CACHE_TIMEOUT_PROPERTY, "1");
-		registry = ActiveTransactionRegistry.INSTANCE;
+		System.setProperty(DefaultActiveTransactionRegistry.CACHE_TIMEOUT_PROPERTY, "1");
+		registry = new DefaultActiveTransactionRegistry();
 		repository = Mockito.mock(Repository.class);
 	}
 

@@ -50,8 +50,10 @@ public class TransactionStartController extends AbstractController {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	private String externalUrl;
+	private ActiveTransactionRegistry activeTransactionRegistry;
 
-	public TransactionStartController() throws ApplicationContextException {
+	public TransactionStartController(ActiveTransactionRegistry instance) throws ApplicationContextException {
+		activeTransactionRegistry = instance;
 		setSupportedMethods(METHOD_POST);
 	}
 
@@ -151,7 +153,7 @@ public class TransactionStartController extends AbstractController {
 			model.put(SimpleResponseView.CUSTOM_HEADERS_KEY, customHeaders);
 
 			ModelAndView result = new ModelAndView(SimpleResponseView.getInstance(), model);
-			ActiveTransactionRegistry.INSTANCE.register(txn);
+			activeTransactionRegistry.register(txn);
 			allGood = true;
 			return result;
 		} catch (RepositoryException | InterruptedException | ExecutionException e) {

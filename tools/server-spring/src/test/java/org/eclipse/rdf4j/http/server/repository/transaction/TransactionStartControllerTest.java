@@ -38,7 +38,8 @@ import org.springframework.web.servlet.ModelAndView;
 
 class TransactionStartControllerTest {
 	private final static String REPO_ID = "test-repo";
-	private final TransactionStartController controller = new TransactionStartController();
+	private final TransactionStartController controller = new TransactionStartController(
+			new DefaultActiveTransactionRegistry());
 
 	private MockHttpServletRequest request;
 	private MockHttpServletResponse response;

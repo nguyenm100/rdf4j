@@ -50,6 +50,8 @@ public class TestBnodesUniquenessInTransactions {
 	private File dataDir;
 	private Repository repository;
 
+	private ActiveTransactionRegistry activeTxRegistry;
+
 	private final String query = "select * where { \n" +
 			"\t?s ?p ?o .\n" +
 			"}";
@@ -63,6 +65,7 @@ public class TestBnodesUniquenessInTransactions {
 
 		request = new MockHttpServletRequest();
 		response = new MockHttpServletResponse();
+		activeTxRegistry = new DefaultActiveTransactionRegistry();
 	}
 
 	@AfterEach
@@ -121,7 +124,7 @@ public class TestBnodesUniquenessInTransactions {
 	 */
 	private void executeTransactionAction(String data) throws Exception {
 		Transaction txn = new Transaction(repository);
-		ActiveTransactionRegistry.INSTANCE.register(txn);
+		activeTxRegistry.register(txn);
 
 		final UUID transactionId = txn.getID();
 
@@ -132,13 +135,13 @@ public class TestBnodesUniquenessInTransactions {
 		request.setContent(data.getBytes(StandardCharsets.UTF_8));
 		request.setContentType(RDFFormat.TURTLE.getDefaultMIMEType());
 
-		TransactionController transactionController = new TransactionController();
+		TransactionController transactionController = new TransactionController(activeTxRegistry);
 
 		response = new MockHttpServletResponse();
 		transactionController.handleRequestInternal(request, response);
 
 		txn.close();
-		ActiveTransactionRegistry.INSTANCE.deregister(txn);
+		activeTxRegistry.deregister(txn);
 	}
 
 }

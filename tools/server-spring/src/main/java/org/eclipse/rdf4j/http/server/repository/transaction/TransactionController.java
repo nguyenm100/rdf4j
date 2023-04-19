@@ -102,8 +102,10 @@ import org.springframework.web.servlet.mvc.AbstractController;
 public class TransactionController extends AbstractController implements DisposableBean {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+	private ActiveTransactionRegistry activeTxRegistry;
 
-	public TransactionController() throws ApplicationContextException {
+	public TransactionController(ActiveTransactionRegistry instance) throws ApplicationContextException {
+		activeTxRegistry = instance;
 		setSupportedMethods(new String[] { METHOD_POST, "PUT", "DELETE" });
 	}
 
@@ -117,7 +119,7 @@ public class TransactionController extends AbstractController implements Disposa
 		logger.debug("transaction id: {}", transactionId);
 		logger.debug("request content type: {}", request.getContentType());
 
-		Transaction transaction = ActiveTransactionRegistry.INSTANCE.getTransaction(transactionId);
+		Transaction transaction = activeTxRegistry.getTransaction(transactionId);
 
 		if (transaction == null) {
 			logger.warn("could not find transaction for transaction id {}", transactionId);
@@ -165,7 +167,7 @@ public class TransactionController extends AbstractController implements Disposa
 			}
 			break;
 		case PING:
-			String text = Long.toString(ActiveTransactionRegistry.INSTANCE.getTimeout(TimeUnit.MILLISECONDS));
+			String text = Long.toString(activeTxRegistry.getTimeout(TimeUnit.MILLISECONDS));
 			Map<String, String> model = Collections.singletonMap(SimpleResponseView.CONTENT_KEY, text);
 			result = new ModelAndView(SimpleResponseView.getInstance(), model);
 			break;
@@ -181,7 +183,7 @@ public class TransactionController extends AbstractController implements Disposa
 					try {
 						transaction.close();
 					} finally {
-						ActiveTransactionRegistry.INSTANCE.deregister(transaction);
+						activeTxRegistry.deregister(transaction);
 					}
 				}
 				result = new ModelAndView(EmptySuccessView.getInstance());
@@ -198,7 +200,7 @@ public class TransactionController extends AbstractController implements Disposa
 			break;
 		}
 		if (!(transaction.isClosed() || transaction.isComplete())) {
-			ActiveTransactionRegistry.INSTANCE.active(transaction);
+			activeTxRegistry.active(transaction);
 		}
 		return result;
 	}
@@ -265,7 +267,7 @@ public class TransactionController extends AbstractController implements Disposa
 				transaction.commit();
 				// If commit fails with an exception, deregister should be skipped so the user
 				// has a chance to do a proper rollback. See #725.
-				ActiveTransactionRegistry.INSTANCE.deregister(transaction);
+				activeTxRegistry.deregister(transaction);
 				break;
 			default:
 				logger.warn("transaction modification action '{}' not recognized", action);
@@ -346,7 +348,7 @@ public class TransactionController extends AbstractController implements Disposa
 	/**
 	 * Evaluates a query on the given connection and returns the resulting {@link QueryResultView}. The
 	 * {@link QueryResultView} will take care of correctly releasing the connection back to the
-	 * {@link ActiveTransactionRegistry}, after fully rendering the query result for sending over the wire.
+	 * {@link DefaultActiveTransactionRegistry}, after fully rendering the query result for sending over the wire.
 	 */
 	private ModelAndView processQuery(Transaction txn, HttpServletRequest request, HttpServletResponse response)
 			throws IOException, HTTPException {
@@ -678,7 +680,7 @@ public class TransactionController extends AbstractController implements Disposa
 	@Override
 	public void destroy()
 			throws Exception {
-		ActiveTransactionRegistry.INSTANCE.destroyScheduler();
+		activeTxRegistry.destroyScheduler();
 	}
 
 }

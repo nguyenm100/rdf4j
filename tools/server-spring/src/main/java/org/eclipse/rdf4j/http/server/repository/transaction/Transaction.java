@@ -64,7 +64,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
  *
  * @author Jeen Broekstra
  */
-class Transaction implements AutoCloseable {
+public class Transaction implements AutoCloseable {
 
 	private static final Logger logger = LoggerFactory.getLogger(Transaction.class);
 
@@ -103,8 +103,19 @@ class Transaction implements AutoCloseable {
 	 * @throws InterruptedException if the transaction thread is interrupted while opening a connection.
 	 * @throws ExecutionException   if an error occurs while opening the connection.
 	 */
-	Transaction(Repository repository) throws InterruptedException, ExecutionException {
-		this.id = UUID.randomUUID();
+	public Transaction(Repository repository) throws InterruptedException, ExecutionException {
+		this(repository, UUID.randomUUID());
+	}
+
+	/**
+	 * Create a new Transaction for the given {@link Repository}.
+	 *
+	 * @param repository the {@link Repository} on which to open a transaction.
+	 * @throws InterruptedException if the transaction thread is interrupted while opening a connection.
+	 * @throws ExecutionException   if an error occurs while opening the connection.
+	 */
+	public Transaction(Repository repository, UUID id) throws InterruptedException, ExecutionException {
+		this.id = id;
 		this.rep = repository;
 		this.txnConnection = getTransactionConnection();
 	}
@@ -114,7 +125,7 @@ class Transaction implements AutoCloseable {
 	 *
 	 * @return a {@link UUID} that identifies this Transaction.
 	 */
-	UUID getID() {
+	public UUID getID() {
 		return id;
 	}
 
@@ -126,7 +137,7 @@ class Transaction implements AutoCloseable {
 	 * @throws InterruptedException if the transaction thread is interrupted
 	 * @throws ExecutionException   if an error occurs while starting the transaction.
 	 */
-	void begin(TransactionSetting... settings) throws InterruptedException, ExecutionException {
+	public void begin(TransactionSetting... settings) throws InterruptedException, ExecutionException {
 		Future<Boolean> result = submit(() -> {
 			txnConnection.begin(settings);
 			return true;
@@ -140,7 +151,7 @@ class Transaction implements AutoCloseable {
 	 * @throws ExecutionException
 	 * @throws InterruptedException
 	 */
-	void rollback() throws InterruptedException, ExecutionException {
+	public void rollback() throws InterruptedException, ExecutionException {
 		Future<Boolean> result = submit(() -> {
 			txnConnection.rollback();
 			return true;
@@ -152,7 +163,7 @@ class Transaction implements AutoCloseable {
 	 * @throws ExecutionException
 	 * @throws InterruptedException
 	 */
-	void prepare() throws InterruptedException, ExecutionException {
+	public void prepare() throws InterruptedException, ExecutionException {
 		Future<Boolean> result = submit(() -> {
 			txnConnection.prepare();
 			return true;
@@ -164,7 +175,7 @@ class Transaction implements AutoCloseable {
 	 * @throws ExecutionException
 	 * @throws InterruptedException
 	 */
-	void commit() throws InterruptedException, ExecutionException {
+	public void commit() throws InterruptedException, ExecutionException {
 		Future<Boolean> result = submit(() -> {
 			txnConnection.commit();
 			return true;
@@ -183,7 +194,7 @@ class Transaction implements AutoCloseable {
 	 * @throws InterruptedException if the transaction thread is interrupted
 	 * @throws ExecutionException   if an error occurs while executing the operation.
 	 */
-	Query prepareQuery(QueryLanguage queryLanguage, String query, String baseURI)
+	public Query prepareQuery(QueryLanguage queryLanguage, String query, String baseURI)
 			throws InterruptedException, ExecutionException {
 		Future<Query> result = submit(() -> txnConnection.prepareQuery(queryLanguage, query, baseURI));
 		return getFromFuture(result);
@@ -197,7 +208,7 @@ class Transaction implements AutoCloseable {
 	 * @throws InterruptedException if the transaction thread is interrupted
 	 * @throws ExecutionException   if an error occurs while executing the operation.
 	 */
-	TupleQueryResult evaluate(TupleQuery tQuery) throws InterruptedException, ExecutionException {
+	public TupleQueryResult evaluate(TupleQuery tQuery) throws InterruptedException, ExecutionException {
 		Future<TupleQueryResult> result = submit(tQuery::evaluate);
 		return getFromFuture(result);
 	}
@@ -210,7 +221,7 @@ class Transaction implements AutoCloseable {
 	 * @throws InterruptedException if the transaction thread is interrupted
 	 * @throws ExecutionException   if an error occurs while executing the operation.
 	 */
-	GraphQueryResult evaluate(GraphQuery gQuery) throws InterruptedException, ExecutionException {
+	public GraphQueryResult evaluate(GraphQuery gQuery) throws InterruptedException, ExecutionException {
 		Future<GraphQueryResult> result = submit(gQuery::evaluate);
 		return getFromFuture(result);
 	}
@@ -223,7 +234,7 @@ class Transaction implements AutoCloseable {
 	 * @throws InterruptedException if the transaction thread is interrupted
 	 * @throws ExecutionException   if an error occurs while executing the operation.
 	 */
-	boolean evaluate(BooleanQuery bQuery) throws InterruptedException, ExecutionException {
+	public boolean evaluate(BooleanQuery bQuery) throws InterruptedException, ExecutionException {
 		Future<Boolean> result = submit(() -> bQuery.evaluate());
 		return getFromFuture(result);
 	}
@@ -238,7 +249,7 @@ class Transaction implements AutoCloseable {
 	 * @throws ExecutionException
 	 * @throws InterruptedException
 	 */
-	void exportStatements(Resource subj, IRI pred, Value obj, boolean useInferencing, RDFWriter rdfWriter,
+	public void exportStatements(Resource subj, IRI pred, Value obj, boolean useInferencing, RDFWriter rdfWriter,
 			Resource... contexts) throws InterruptedException, ExecutionException {
 		Future<Boolean> result = submit(() -> {
 			txnConnection.exportStatements(subj, pred, obj, useInferencing, rdfWriter, contexts);
@@ -254,7 +265,7 @@ class Transaction implements AutoCloseable {
 	 *                 optional. If no contexts are supplied the method operates on the entire repository.
 	 * @return The number of explicit statements from the specified contexts in this transaction.
 	 */
-	long getSize(Resource[] contexts) throws InterruptedException, ExecutionException {
+	public long getSize(Resource[] contexts) throws InterruptedException, ExecutionException {
 		Future<Long> result = submit(() -> txnConnection.size(contexts));
 		return getFromFuture(result);
 	}
@@ -269,7 +280,8 @@ class Transaction implements AutoCloseable {
 	 * @throws ExecutionException
 	 * @throws InterruptedException
 	 */
-	void add(InputStream inputStream, String baseURI, RDFFormat format, boolean preserveBNodes, Resource... contexts)
+	public void add(InputStream inputStream, String baseURI, RDFFormat format, boolean preserveBNodes,
+			Resource... contexts)
 			throws InterruptedException, ExecutionException {
 		Future<Boolean> result = submit(() -> {
 			logger.debug("executing add operation");
@@ -305,7 +317,7 @@ class Transaction implements AutoCloseable {
 	 * @throws ExecutionException
 	 * @throws InterruptedException
 	 */
-	void delete(RDFFormat contentType, InputStream inputStream, String baseURI)
+	public void delete(RDFFormat contentType, InputStream inputStream, String baseURI)
 			throws InterruptedException, ExecutionException {
 		Future<Boolean> result = submit(() -> {
 			logger.debug("executing delete operation");
@@ -334,7 +346,7 @@ class Transaction implements AutoCloseable {
 	 * @throws ExecutionException
 	 * @throws InterruptedException
 	 */
-	void executeUpdate(QueryLanguage queryLn, String sparqlUpdateString, String baseURI, boolean includeInferred,
+	public void executeUpdate(QueryLanguage queryLn, String sparqlUpdateString, String baseURI, boolean includeInferred,
 			Dataset dataset, Map<String, Value> bindings) throws InterruptedException, ExecutionException {
 		Future<Boolean> result = submit(() -> {
 			Update update = txnConnection.prepareUpdate(queryLn, sparqlUpdateString, baseURI);
@@ -357,7 +369,7 @@ class Transaction implements AutoCloseable {
 	 *
 	 * @return True if there are currently no active tasks being executed for this transaction and false otherwise.
 	 */
-	boolean hasActiveOperations() {
+	public boolean hasActiveOperations() {
 		return activeOperations.get() > 0;
 	}
 
@@ -366,7 +378,7 @@ class Transaction implements AutoCloseable {
 	 *
 	 * @return True if the close method has been called for this transaction.
 	 */
-	boolean isClosed() {
+	public boolean isClosed() {
 		return isClosed.get();
 	}
 
@@ -375,7 +387,7 @@ class Transaction implements AutoCloseable {
 	 *
 	 * @return True if the close operations have been completed.
 	 */
-	boolean isComplete() {
+	public boolean isComplete() {
 		return closeCompleted.get();
 	}
 

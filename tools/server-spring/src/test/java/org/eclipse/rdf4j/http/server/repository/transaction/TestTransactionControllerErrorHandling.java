@@ -44,6 +44,8 @@ public class TestTransactionControllerErrorHandling {
 	private File dataDir;
 	private Repository repository;
 
+	private ActiveTransactionRegistry activeTxRegistry;
+
 	@BeforeEach
 	public void setUp() throws IOException {
 		dataDir = Files.createTempDirectory(repositoryID).toFile();
@@ -53,6 +55,7 @@ public class TestTransactionControllerErrorHandling {
 
 		request = new MockHttpServletRequest();
 		response = new MockHttpServletResponse();
+		activeTxRegistry = new DefaultActiveTransactionRegistry();
 	}
 
 	@AfterEach
@@ -69,7 +72,7 @@ public class TestTransactionControllerErrorHandling {
 				"}";
 
 		Transaction txn = new Transaction(repository);
-		ActiveTransactionRegistry.INSTANCE.register(txn);
+		activeTxRegistry.register(txn);
 
 		final UUID transactionId = txn.getID();
 
@@ -80,7 +83,7 @@ public class TestTransactionControllerErrorHandling {
 		request.setContentType("application/sparql-query; charset=utf-8");
 		request.setContent(testQuery.getBytes(StandardCharsets.UTF_8));
 
-		TransactionController transactionController = new TransactionController();
+		TransactionController transactionController = new TransactionController(activeTxRegistry);
 
 		response = new MockHttpServletResponse();
 
@@ -93,7 +96,7 @@ public class TestTransactionControllerErrorHandling {
 					"QName 'ex:data' uses an undefined prefix", e.getMessage());
 		} finally {
 			txn.close();
-			ActiveTransactionRegistry.INSTANCE.deregister(txn);
+			activeTxRegistry.deregister(txn);
 		}
 	}
 }
