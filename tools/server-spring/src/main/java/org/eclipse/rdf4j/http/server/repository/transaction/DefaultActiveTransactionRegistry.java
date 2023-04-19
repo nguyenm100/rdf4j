@@ -32,13 +32,11 @@ import com.google.common.cache.RemovalNotification;
  *
  * @author Jeen Broekstra
  */
-public enum ActiveTransactionRegistry {
-
-	INSTANCE;
+public class DefaultActiveTransactionRegistry implements ActiveTransactionRegistry {
 
 	private int timeout = DEFAULT_TIMEOUT;
 
-	private final Logger logger = LoggerFactory.getLogger(ActiveTransactionRegistry.class);
+	private final Logger logger = LoggerFactory.getLogger(DefaultActiveTransactionRegistry.class);
 
 	/**
 	 * Configurable system property {@code rdf4j.server.txn.registry.timeout} for specifying the transaction cache
@@ -83,7 +81,7 @@ public enum ActiveTransactionRegistry {
 	/**
 	 * private constructor.
 	 */
-	ActiveTransactionRegistry() {
+	DefaultActiveTransactionRegistry() {
 		final String configuredValue = System.getProperty(Protocol.CACHE_TIMEOUT_PROPERTY);
 		if (configuredValue != null) {
 			try {
