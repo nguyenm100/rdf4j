@@ -123,6 +123,7 @@ class TransactionStartControllerTest {
 		Transaction tx = mock(Transaction.class);
 		// Arrange
 		controller.setExternalUrl(null);
+		controller.setActiveTransactionRegistry(new DefaultActiveTransactionRegistry());
 
 		request.addParameter("isolation-level", "SNAPSHOT");
 		Repository repository = RepositoryInterceptor.getRepository(request);
@@ -140,6 +141,7 @@ class TransactionStartControllerTest {
 		Transaction tx = mock(Transaction.class);
 		// Arrange
 		controller.setExternalUrl(null);
+		controller.setActiveTransactionRegistry(new DefaultActiveTransactionRegistry());
 
 		request.addParameter("isolation-level", "http://www.openrdf.org/schema/sesame#READ_COMMITTED");
 		Repository repository = RepositoryInterceptor.getRepository(request);

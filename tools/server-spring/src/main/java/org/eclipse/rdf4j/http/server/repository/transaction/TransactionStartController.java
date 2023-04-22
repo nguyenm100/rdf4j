@@ -52,9 +52,19 @@ public class TransactionStartController extends AbstractController {
 	private String externalUrl;
 	private ActiveTransactionRegistry activeTransactionRegistry;
 
-	public TransactionStartController(ActiveTransactionRegistry instance) throws ApplicationContextException {
-		activeTransactionRegistry = instance;
+	// need a parameterless constructor for mocking
+	TransactionStartController() {
+		activeTransactionRegistry = null;
 		setSupportedMethods(METHOD_POST);
+	}
+
+	public TransactionStartController(ActiveTransactionRegistry instance) throws ApplicationContextException {
+		setActiveTransactionRegistry(instance);
+		setSupportedMethods(METHOD_POST);
+	}
+
+	void setActiveTransactionRegistry(ActiveTransactionRegistry instance) {
+		activeTransactionRegistry = instance;
 	}
 
 	@Override
