@@ -45,14 +45,11 @@ import org.eclipse.rdf4j.query.impl.EmptyBindingSet;
  */
 public class HashJoinIteration extends LookAheadIteration<BindingSet, QueryEvaluationException> {
 
-	/*-----------*
-	 * Variables *
-	 *-----------*/
-
 	protected final String[] joinAttributes;
 	private final CloseableIteration<BindingSet, QueryEvaluationException> leftIter;
 	private final CloseableIteration<BindingSet, QueryEvaluationException> rightIter;
 	private final boolean leftJoin;
+
 	private Iterator<BindingSet> scanList;
 	private CloseableIteration<BindingSet, QueryEvaluationException> restIter;
 	private Map<BindingSetHashKey, List<BindingSet>> hashTable;

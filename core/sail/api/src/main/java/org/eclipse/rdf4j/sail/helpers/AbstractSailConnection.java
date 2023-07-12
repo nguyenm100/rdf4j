@@ -55,6 +55,13 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractSailConnection implements SailConnection {
 
+	private static boolean assertsEnabled = false;
+
+	static {
+		// noinspection AssertWithSideEffects
+		assert assertsEnabled = true;
+	}
+
 	private static final ConcurrentCleaner cleaner = new ConcurrentCleaner();
 
 	/**
@@ -310,6 +317,9 @@ public abstract class AbstractSailConnection implements SailConnection {
 			CloseableIteration<? extends BindingSet, QueryEvaluationException> iteration = null;
 			try {
 				iteration = evaluateInternal(tupleExpr, dataset, bindings, includeInferred);
+				if (assertsEnabled) {
+					iteration = new TupleExprWrapperIteration<>(iteration, tupleExpr);
+				}
 				return registerIteration(iteration);
 			} catch (Throwable t) {
 				if (iteration != null) {
@@ -428,11 +438,11 @@ public abstract class AbstractSailConnection implements SailConnection {
 	 * can use {@link AbstractSailConnection#verifyIsActive()} as a convenience method for this check.
 	 *
 	 * @throws SailException if no transaction is active.
-	 * @deprecated since 2.7.0. Use {@link #verifyIsActive()} instead. We should not automatically start a transaction
-	 *             at the sail level. Instead, an exception should be thrown when an update is executed without first
-	 *             starting a transaction.
+	 * @deprecated Use {@link #verifyIsActive()} instead. We should not automatically start a transaction at the sail
+	 *             level. Instead, an exception should be thrown when an update is executed without first starting a
+	 *             transaction.
 	 */
-	@Deprecated
+	@Deprecated(since = "2.7.0")
 	protected void autoStartTransaction() throws SailException {
 		verifyIsActive();
 	}
@@ -942,6 +952,10 @@ public abstract class AbstractSailConnection implements SailConnection {
 		long closed = iterationsClosed.sum();
 		long opened = iterationsOpened.sum();
 		return closed != opened;
+	}
+
+	protected AbstractSail getSailBase() {
+		return sailBase;
 	}
 
 	private void forceCloseActiveOperations() throws SailException {
